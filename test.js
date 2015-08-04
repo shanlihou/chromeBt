@@ -12,41 +12,56 @@ var urlList = new Array();
 			return this;
 		},
 		displayContent:function(){
-
 			if (xhr.readyState==4)
 			{// 4 = "loaded"
 				if (xhr.status==200)
 				{// 200 = "OK"
-					var re = new RegExp("http://www\.btava\.com/magnet/detail/hash/[A-F0-9]+", "g");
+					var urlRe = new RegExp("http://www\.btava\.com/magnet/detail/hash/[A-F0-9]+", "g");
+					var titleRe = new RegExp("\" title=\"[^\"]+", "g");
+					var sizeRe = new RegExp("Size:[^ ]+", "g");
 					urlList.length = 0;
 					var i = 0;
+					var result;
 					while(1)
 					{
-						var result = re.exec(xhr.responseText);
+						var urlItem={
+							id:0,
+							url:'',
+							title:'',
+							size:''
+						};
+						urlItem.id = i;
+						result = urlRe.exec(xhr.responseText);
 						if(result == null)
 						{
 							break;
 						}
-						console.log(typeof(result));
-						console.log(result);
-						urlList[i] = result;
+						urlItem.url = result;
+						result = titleRe.exec(xhr.responseText);
+						if(result == null)
+						{
+							break;
+						}
+						urlItem.title = result.toString().substring(9);
+						console.log(result.toString().substring(9));
+						result = sizeRe.exec(xhr.responseText);
+						if(result == null)
+						{
+							break;
+						}
+						urlItem.size = result.toString().substring(5);
+						console.log(result.toString().substring(5));
+						console.log(urlItem);
+						urlList.push(urlItem);
 						i++;
 					}
 					for(var i=0,len=urlList.length;i<len;i++){
-						console.log(typeof(urlList[i]));
-						console.log(urlList[i]);
-						var task={
-							id:0,
-							task_item:urlList[i],
-							add_time:new Date(),
-							is_finished:false
-						};
-						Tasks.AppendHtml(task);
+						Tasks.AppendHtml(urlList[i]);
 					}
 				}
 				else
 				{
-					alert("Problem retrieving XML data:" + xhr.status);
+					alert("Problem retrieving XML data:" + xhr.statusText);
 				}
 			}
 		},
@@ -57,6 +72,11 @@ var urlList = new Array();
 		$taskItemList:$('taskItemList'),
 		//指针
 		index:window.localStorage.getItem('Tasks:index'),
+		tagSearch:function(code){
+			xhr.onreadystatechange = Tasks.displayContent;
+			xhr.open("GET", "http://www.btava.com/search/" + encodeURIComponent(code), true);
+			xhr.send(null);
+		},
 		//初始化
 		init:function(){
 			if(!Tasks.index){
@@ -75,6 +95,7 @@ var urlList = new Array();
 			Tasks.$txtTaskTitle.addEventListener('keyup',function(ev){
 				var ev=ev || window.event;
 				if(ev.keyCode==13){
+					Tasks.tagSearch($('txtTaskTitle').value);/*
 					var task={
 						id:0,
 						task_item:$('txtTaskTitle').value,
@@ -85,7 +106,7 @@ var urlList = new Array();
 					Tasks.AppendHtml(task);
 					Tasks.$txtTaskTitle.value='';
 					Tasks.hide(Tasks.$addItemInput).show(Tasks.$addItemDiv);
-					chrome.runtime.sendMessage({cmd: "mycmd"}, function(response) {  console.log(response); });
+					chrome.runtime.sendMessage({cmd: "mycmd"}, function(response) {  console.log(response); });*/
 				}
 				ev.preventDefault();
 			},true);
@@ -94,22 +115,6 @@ var urlList = new Array();
 				Tasks.$txtTaskTitle.value='';
 				Tasks.hide(Tasks.$addItemInput).show(Tasks.$addItemDiv);
 			},true);
-			//初始化数据
-			if(window.localStorage.length-1){
-				var task_list=[];
-				var key;
-				for(var i=0,len=window.localStorage.length;i<len;i++){
-					key=window.localStorage.key(i);
-					if(/task:\d+/.test(key)){
-						task_list.push(JSON.parse(window.localStorage.getItem(key)));
-					}
-				}
-				for(var i=0,len=task_list.length;i<len;i++){
-					console.log(typeof(task_list[i]));
-					console.log(task_list[i]);
-					Tasks.AppendHtml(task_list[i]);
-				}
-			}
 		},
 		//增加
 		Add:function(task){
@@ -126,40 +131,25 @@ var urlList = new Array();
 		Del:function(task){
 			window.localStorage.removeItem("task:"+ task.id);
 		},
-		AppendHtml:function(task){
+		AppendHtml:function(urlItem){
 			var oDiv=document.createElement('div');
-			oDiv.className='taskItem';
-			oDiv.setAttribute('id','task_' + task.id);
-			var addTime=new Date(task.add_time);
-			var timeString=addTime.getMonth() + '-' + addTime.getDate() + ' ' + addTime.getHours() + ':' + addTime.getMinutes() + ':' + addTime.getSeconds();
-			oDiv.setAttribute('title',timeString);
-			var oLabel=document.createElement('label');
-			oLabel.className= task.is_finished ? 'off' : 'on';
-			var oSpan=document.createElement('span');
-			oSpan.className='taskTitle';
-			var oText=document.createTextNode(task.task_item);
-			oSpan.appendChild(oText);
-			oDiv.appendChild(oLabel);
-			oDiv.appendChild(oSpan);
-			//注册事件
+			oDiv.className='urlItem';
+			oDiv.setAttribute('id','url_' + urlItem.id);
+			oDiv.setAttribute('title', urlItem.url);
+			var spanTitle = document.createElement('span');
+			spanTitle.className = 'urlTitle';
+			var textTitle = document.createTextNode(urlItem.title);
+
+			var spanSize = document.createElement('span');
+			spanSize.classNmae = 'urlSize';
+			var textSize = document.createTextNode(urlItem.size);
+
+			spanTitle.appendChild(textTitle);
+			spanSize.appendChild(textSize);
+			oDiv.appendChild(spanTitle);
+			oDiv.appendChild(spanSize);
+
 			oDiv.addEventListener('click',function(){
-				if(!task.is_finished){
-					task.is_finished=!task.is_finished;
-					var lbl=this.getElementsByTagName('label')[0];
-					lbl.className= (lbl.className=='on') ? 'off' : 'on';
-					Tasks.Edit(task);
-				}else{
-					if(confirm('是否确定要删除此项？\r\n\r\n点击确定删除，点击取消置为未完成。')){
-						Tasks.Del(task);
-						Tasks.RemoveHtml(task);
-						chrome.runtime.sendMessage({cmd: "mycmd"}, function(response) {  console.log(response); });
-					}else{
-						task.is_finished=!task.is_finished;
-						var lbl=this.getElementsByTagName('label')[0];
-						lbl.className= (lbl.className=='on') ? 'off' : 'on';
-						Tasks.Edit(task);
-					}
-				}
 			},true);
 			Tasks.$taskItemList.appendChild(oDiv);	
 		},

@@ -10,30 +10,15 @@ img{margin:0 4px;}
 #addItemDiv{color:#ccc;height:20px;}
 .hide{display:none;}
 .show{display:block;}
-.taskItem{cursor:pointer;padding:2px 0;}
+.urlItem{cursor:pointer;padding:2px 0;}
 input{width:100%;}
-label.on{width:12px; display:inline-block; height:12px; background:url(images/bg_task_on.gif) no-repeat 0px 2px;}
-label.off{width:12px; display:inline-block; height:12px; background:url(images/bg_task_off.gif) no-repeat 0px 2px;}
+span.urlTitle{color:red;}
 </style>
 </head>
 <body>
 <div id="addItemDiv">添加新项</div>
 <div id="addItemInput" class="hide"><input type="text" id="txtTaskTitle" /></div>
 <div id="taskItemList"></div>
-
-<div class="hide">
-<p><b>Status:</b>
-<span id="A1"></span>
-</p>
-
-<p><b>Status text:</b>
-<span id="A2"></span>
-</p>
-
-<p ><b>Response:</b>
-<br /><span id="A3"></span>
-</p>
-</div>
 <script type="text/javascript" src="util.js" ></script>
 <script type="text/javascript" src="test.js" ></script>
 </body>
