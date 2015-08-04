@@ -1,20 +1,5 @@
 var xhr = new XMLHttpRequest();
-var displayContent = function(){
-
-	if (xhr.readyState==4)
-	{// 4 = "loaded"
-		if (xhr.status==200)
-		{// 200 = "OK"
-			document.getElementById('A1').innerHTML=xhr.status;
-			document.getElementById('A2').innerHTML=xhr.statusText;
-			document.getElementById('A3').innerHTML=xhr.responseText;
-		}
-		else
-		{
-			alert("Problem retrieving XML data:" + xhr.status);
-		}
-	}
-};
+var urlList = new Array();
 (function(){
 	var $=function(id){return document.getElementById(id);}
 	var Tasks = {
@@ -26,7 +11,46 @@ var displayContent = function(){
 			obj.className='hide';
 			return this;
 		},
-		//存储dom
+		displayContent:function(){
+
+			if (xhr.readyState==4)
+			{// 4 = "loaded"
+				if (xhr.status==200)
+				{// 200 = "OK"
+					var re = new RegExp("http://www\.btava\.com/magnet/detail/hash/[A-F0-9]+", "g");
+					urlList.length = 0;
+					var i = 0;
+					while(1)
+					{
+						var result = re.exec(xhr.responseText);
+						if(result == null)
+						{
+							break;
+						}
+						console.log(typeof(result));
+						console.log(result);
+						urlList[i] = result;
+						i++;
+					}
+					for(var i=0,len=urlList.length;i<len;i++){
+						console.log(typeof(urlList[i]));
+						console.log(urlList[i]);
+						var task={
+							id:0,
+							task_item:urlList[i],
+							add_time:new Date(),
+							is_finished:false
+						};
+						Tasks.AppendHtml(task);
+					}
+				}
+				else
+				{
+					alert("Problem retrieving XML data:" + xhr.status);
+				}
+			}
+		},
+			//存储dom
 		$addItemDiv:$('addItemDiv'),
 		$addItemInput:$('addItemInput'),
 		$txtTaskTitle:$('txtTaskTitle'),
@@ -38,8 +62,8 @@ var displayContent = function(){
 			if(!Tasks.index){
 				window.localStorage.setItem('Tasks:index',Tasks.index=0);
 			}
-			xhr.onreadystatechange = displayContent; // Implemented elsewhere.
-			xhr.open("GET", 'http://www.btava.com', true);
+			xhr.onreadystatechange = Tasks.displayContent; // Implemented elsewhere.
+			xhr.open("GET", 'http://www.btava.com/search/wanz-213', true);
 			xhr.send(null);
 			/*注册事件*/
 			//打开添加文本框
@@ -81,6 +105,8 @@ var displayContent = function(){
 					}
 				}
 				for(var i=0,len=task_list.length;i<len;i++){
+					console.log(typeof(task_list[i]));
+					console.log(task_list[i]);
 					Tasks.AppendHtml(task_list[i]);
 				}
 			}
