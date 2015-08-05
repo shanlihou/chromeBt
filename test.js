@@ -95,6 +95,7 @@ var urlList = new Array();
 			Tasks.$txtTaskTitle.addEventListener('keyup',function(ev){
 				var ev=ev || window.event;
 				if(ev.keyCode==13){
+					Tasks.RemoveAll();
 					Tasks.tagSearch($('txtTaskTitle').value);/*
 					var task={
 						id:0,
@@ -152,6 +153,12 @@ var urlList = new Array();
 			oDiv.addEventListener('click',function(){
 			},true);
 			Tasks.$taskItemList.appendChild(oDiv);	
+		},
+		RemoveAll:function(){
+			while(Tasks.$taskItemList.hasChildNodes()) //当div下还存在子节点时 循环继续
+			{
+				Tasks.$taskItemList.removeChild(Tasks.$taskItemList.firstChild);
+			}
 		},
 		RemoveHtml:function(task){
 			var taskListDiv=Tasks.$taskItemList.getElementsByTagName('div');
