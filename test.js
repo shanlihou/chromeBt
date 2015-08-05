@@ -43,15 +43,12 @@ var urlList = new Array();
 							break;
 						}
 						urlItem.title = result.toString().substring(9);
-						console.log(result.toString().substring(9));
 						result = sizeRe.exec(xhr.responseText);
 						if(result == null)
 						{
 							break;
 						}
 						urlItem.size = result.toString().substring(5);
-						console.log(result.toString().substring(5));
-						console.log(urlItem);
 						urlList.push(urlItem);
 						i++;
 					}
@@ -64,6 +61,31 @@ var urlList = new Array();
 					alert("Problem retrieving XML data:" + xhr.statusText);
 				}
 			}
+		},
+		getMovieCode:function(){
+			if (xhr.readyState==4)
+			{// 4 = "loaded"
+				if (xhr.status==200)
+				{// 200 = "OK"
+					var re = new RegExp("itemreviewed\">[^<]+", "g");
+					var result;
+					while(1){
+						result = re.exec(xhr.responseText);
+						if (result == null)
+						{
+							break;
+						}
+						console.log(result.toString().substring(14));
+						Tasks.tagSearch(result.toString().substring(14));
+					}
+					
+				}
+				else
+				{
+					alert("Problem retrieving XML data:" + xhr.statusText);
+				}
+			}
+
 		},
 			//存储dom
 		$addItemDiv:$('addItemDiv'),
@@ -82,9 +104,18 @@ var urlList = new Array();
 			if(!Tasks.index){
 				window.localStorage.setItem('Tasks:index',Tasks.index=0);
 			}
-			xhr.onreadystatechange = Tasks.displayContent; // Implemented elsewhere.
-			xhr.open("GET", 'http://www.btava.com/search/wanz-213', true);
-			xhr.send(null);
+			chrome.windows.getCurrent(function(wnd){
+				chrome.tabs.getAllInWindow(wnd.id, function(tabs){
+					for (var i = 0; i < tabs.length; i++){
+						if (tabs[i].selected == true){
+							console.log(tabs[i].url);
+							xhr.onreadystatechange = Tasks.getMovieCode; // Implemented elsewhere.
+							xhr.open("GET", tabs[i].url, true);
+							xhr.send(null);
+						}
+					}
+				});
+			});
 			/*注册事件*/
 			//打开添加文本框
 			Tasks.$addItemDiv.addEventListener('click',function(){
