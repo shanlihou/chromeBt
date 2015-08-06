@@ -4,6 +4,9 @@ var PASSPORT_BASE = "https://passport.baidu.com/";
 var PASSPORT_URL = PASSPORT_BASE + "v2/api/";
 var ACCEPT_HTML = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 var token = '';
+var urlMag = '';
+var vcodeGet = '';
+var selectIds = '';
 (function(){
 	var $=function(id){return document.getElementById(id);}
 	var Tasks = {
@@ -46,7 +49,7 @@ var token = '';
 			xhr.send(null);
 			Tasks.$state.innerHTML = 'get code';
 		},
-		addTask:function(url, fileIds){
+		addTask:function(url, fileIds, vcode, vcodeInput){
 			var timeStamp = new Date().getTime();
 			var urlAdd = PAN_URL + "rest/2.0/services/cloud_dl?channel=chunlei&clienttype=0&web=1" +
 			                "&bdstoken=" + token;
@@ -54,13 +57,33 @@ var token = '';
 				"&save_path=" + encodeURIComponent('/') + "&selected_idx=" + fileIds +
 				"&task_from=1" + "&t=" + timeStamp + "&" + "source_url" +
 				"=" + encodeURIComponent(url) + "&type=4";
+			if (vcode != '')
+			{
+				data += "&input=" + vcodeInput + "&vcode=" + vcode;
+			}
 			var xhr = new XMLHttpRequest();
 			xhr.onreadystatechange = function(){
 				if (xhr.readyState == 4)
 				{
 					console.log(xhr.responseText);
 					var jsonRe = JSON.parse(xhr.responseText);
-					Tasks.$state.innerHTML='retCode is :' + jsonRe.rapid_download;
+					if (jsonRe.error_code)
+					{
+						Tasks.$state.innerHTML='errMsg is:' + jsonRe.error_msg;
+						var img = document.createElement('img');
+						console.log(jsonRe.img);
+						img.setAttribute('src', jsonRe.img);
+						img.setAttribute('id', 'codeImg');
+						Tasks.$vCode.appendChild(img);
+						Tasks.show(Tasks.$eCode);
+						urlMag = url;
+						vcodeGet = jsonRe.vcode;
+						selectIds = fileIds;
+					}
+					else
+					{
+						Tasks.$state.innerHTML='retCode is :' + jsonRe.rapid_download;
+					}
 				}
 				else
 				{
@@ -112,7 +135,7 @@ var token = '';
 							}
 						}
 						console.log(strSel);
-						Tasks.addTask(url, strSel);
+						Tasks.addTask(url, strSel, '', '');
 					}
 					else
 					{
@@ -166,6 +189,9 @@ var token = '';
 		$state:$('state'),
 		$token:$('token'),
 		$bToken:$('bToken'),
+		$vCode:$('vCode'),
+		$eCode:$('eCode'),
+		$eEdit:$('eEdit'),
 		//指针
 		index:window.localStorage.getItem('Tasks:index'),
 		
@@ -174,8 +200,7 @@ var token = '';
 			xhr.onreadystatechange = function(){
 				if (xhr.readyState==4)
 				{// 4 = "loaded"
-					Tasks.$state.innerHTML = "idle";
-					console.log(xhr.status);
+					console.log('status:' + xhr.status);
 					if (xhr.status==200)
 					{// 200 = "OK"
 						var urlRe = new RegExp("Detail</a><a href=\"[^\"]+", "g");
@@ -185,6 +210,7 @@ var token = '';
 						var i = 0;
 						var result;
 						console.log('torrent:' + code);
+						Tasks.$state.innerHTML = "search finished";
 						while(1)
 						{
 							var urlItem={
@@ -218,19 +244,24 @@ var token = '';
 							urlList.push(urlItem);
 							i++;
 						}
+						if (i == 0)
+						{
+							Tasks.$state.innerHTML = 'not find';
+						}
 						for(var i=0,len=urlList.length;i<len;i++){
 							Tasks.AppendHtml(urlList[i]);
 						}
 					}
 					else
 					{
-						alert("Problem retrieving XML data:" + xhr.statusText);
+						Tasks.$state.innerHTML = xhr.statusText;
 					}
 				}
 			};
 			xhr.open("GET", "http://www.torrentkitty.org/search/" + encodeURIComponent(code), true);
+			console.log(encodeURIComponent(code));
 			xhr.send(null);
-			Tasks.$state.innerHTML = "search";
+			Tasks.$state.innerHTML = "search:" + code;
 		},
 		getCurTab:function(){
 			chrome.windows.getCurrent(function(wnd){
@@ -269,9 +300,22 @@ var token = '';
 				if(ev.keyCode==13){
 					Tasks.RemoveAll();
 					Tasks.tagSearch($('txtTaskTitle').value);
+					Tasks.$txtTaskTitle.value='';
+					Tasks.hide(Tasks.$addItemInput).show(Tasks.$addItemDiv);
 				}
 				ev.preventDefault();
 			},true);
+			Tasks.$eEdit.addEventListener('keyup', function(ev){
+				var ev=ev || window.event;
+				if (ev.keyCode == 13){
+					var codeImg = document.getElementById('codeImg');
+					Tasks.addTask(urlMag, selectIds, vcodeGet, Tasks.$eEdit.value);
+					Tasks.$vCode.removeChild(codeImg);
+					Tasks.$eEdit.value = '';
+					Tasks.hide(Tasks.$eCode);
+				}
+				ev.preventDefault();
+			}, true);
 			//取消
 			Tasks.$txtTaskTitle.addEventListener('blur',function(){
 				Tasks.$txtTaskTitle.value='';
