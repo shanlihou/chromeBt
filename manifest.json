@@ -4,7 +4,8 @@
   "description": "I can't has cheezburger!",
   "permissions": ["notifications",
 				"webRequest", "webRequestBlocking",
-			"*://*/*", "tabs"],
+			"*://*/*", "tabs",
+			"cookies"],
   "background": {
     "scripts": ["loldogs.js","util.js", "background.js"]
   },
