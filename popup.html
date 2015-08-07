@@ -11,6 +11,7 @@ img{margin:0 4px;}
 .hide{display:none;}
 .show{display:block;}
 .urlItem{cursor:pointer;padding:2px 0;}
+.float{height:300px;overflow-y:scroll; overflow-x:scroll;}
 input{width:100%;}
 span.urlTitle{color:red;}
 </style>
@@ -23,7 +24,7 @@ span.urlTitle{color:red;}
 <div id="state">idle</div>
 <div id="addItemDiv">添加新项</div>
 <div id="addItemInput" class="hide"><input type="text" id="txtTaskTitle" /></div>
-<div id="taskItemList"></div>
+<div id="taskItemList" class="float"></div>
 <script type="text/javascript" src="util.js" ></script>
 <script type="text/javascript" src="test.js" ></script>
 </body>
