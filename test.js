@@ -49,6 +49,20 @@ var selectIds = '';
 			xhr.send(null);
 			Tasks.$state.innerHTML = 'get code';
 		},
+		cancelTask:function(taskId){
+			console.log(taskId);
+			var timeStamp = new Date().getTime();
+			var urlCancel = PAN_URL + 'rest/2.0/services/cloud_dl' + '?bdstoken=' + token + 
+				'&task_id=' + taskId + '&method=cancel_task&app_id=250528' +
+				'&t=' + timeStamp + '&channel=chunlei&clienttype=0&web=1';
+			var xhr = new XMLHttpRequest();
+			xhr.onreadystatechange = function(){
+			};
+			xhr.open("GET", urlCancel, true);
+			xhr.send(null);
+			Tasks.$state.innerHtml = 'rm task:' + taskId;
+
+		},
 		addTask:function(url, fileIds, vcode, vcodeInput){
 			var timeStamp = new Date().getTime();
 			var urlAdd = PAN_URL + "rest/2.0/services/cloud_dl?channel=chunlei&clienttype=0&web=1" +
@@ -70,19 +84,28 @@ var selectIds = '';
 					if (jsonRe.error_code)
 					{
 						Tasks.$state.innerHTML='errMsg is:' + jsonRe.error_msg;
-						var img = document.createElement('img');
-						console.log(jsonRe.img);
-						img.setAttribute('src', jsonRe.img);
-						img.setAttribute('id', 'codeImg');
-						Tasks.$vCode.appendChild(img);
-						Tasks.show(Tasks.$eCode);
-						urlMag = url;
-						vcodeGet = jsonRe.vcode;
-						selectIds = fileIds;
+						if (jsonRe.error_code == -19)
+						{
+							var img = document.createElement('img');
+							console.log(jsonRe.img);
+							img.setAttribute('src', jsonRe.img);
+							img.setAttribute('id', 'codeImg');
+							Tasks.$vCode.appendChild(img);
+							Tasks.show(Tasks.$eCode);
+							Tasks.$eEdit.focus();
+							urlMag = url;
+							vcodeGet = jsonRe.vcode;
+							selectIds = fileIds;
+						}
 					}
 					else
 					{
 						Tasks.$state.innerHTML='retCode is :' + jsonRe.rapid_download;
+						if (jsonRe.rapid_download == 0)
+						{
+							console.log('cancel');
+							Tasks.cancelTask(jsonRe.task_id.toString());
+						}
 					}
 				}
 				else
@@ -249,6 +272,7 @@ var selectIds = '';
 							Tasks.$state.innerHTML = 'not find';
 						}
 						for(var i=0,len=urlList.length;i<len;i++){
+							Tasks.Add(urlList[i]);
 							Tasks.AppendHtml(urlList[i]);
 						}
 					}
@@ -270,9 +294,34 @@ var selectIds = '';
 						if (tabs[i].selected == true){
 							console.log(tabs[i].url);
 							if (tabs[i].url.indexOf("movie.douban.com") == -1){
-								break;
+								var itemList = [];
+								for (var j = 0, len = window.localStorage.length; j < len; j++)
+								{
+									var key = window.localStorage.key(j);
+									if (/url_\d+/.test(key))
+									{
+										Tasks.AppendHtml(JSON.parse(window.localStorage.getItem(key)));
+									}
+								}
 							}
-							Tasks.getMovieCode(tabs[i].url);
+							else
+							{
+								console.log('del all');
+								var j = 0;
+								while(j < window.localStorage.length)
+								{
+									var key = window.localStorage.key(j);
+									console.log(j + ':' + len + ':' + key);
+									if (/url_\d+/.test(key))
+									{
+										window.localStorage.removeItem(key);
+										continue;
+									}
+									j++;
+								}
+								Tasks.getMovieCode(tabs[i].url);
+							}
+							break;
 						}
 					}
 				});
@@ -324,19 +373,17 @@ var selectIds = '';
 			Tasks.$bToken.onclick=Tasks.getToken;
 		},
 		//增加
-		Add:function(task){
+		Add:function(urlItem){
 			//更新指针
-			window.localStorage.setItem('Tasks:index', ++Tasks.index);
-			task.id=Tasks.index;
-			window.localStorage.setItem("task:"+ Tasks.index, JSON.stringify(task));
+			window.localStorage.setItem("url_" + urlItem.id, JSON.stringify(urlItem));
 		},
 		//修改
 		Edit:function(task){
 			window.localStorage.setItem("task:"+ task.id, JSON.stringify(task));
 		},
 		//删除
-		Del:function(task){
-			window.localStorage.removeItem("task:"+ task.id);
+		Del:function(urlItem){
+			window.localStorage.removeItem("url_"+ urlItem.id);
 		},
 		AppendHtml:function(urlItem){
 			var oDiv=document.createElement('div');
@@ -364,17 +411,9 @@ var selectIds = '';
 		RemoveAll:function(){
 			while(Tasks.$taskItemList.hasChildNodes()) //当div下还存在子节点时 循环继续
 			{
-				Tasks.$taskItemList.removeChild(Tasks.$taskItemList.firstChild);
-			}
-		},
-		RemoveHtml:function(task){
-			var taskListDiv=Tasks.$taskItemList.getElementsByTagName('div');
-			for(var i=0,len=taskListDiv.length;i<len;i++){
-				var id=parseInt(taskListDiv[i].getAttribute('id').substring(5));
-				if(id==task.id){
-					Tasks.$taskItemList.removeChild(taskListDiv[i]);
-					break;
-				}
+				var tmp = Tasks.$taskItemList.firstChild;
+				window.localStorage.removeItem(tmp.getAttribute('id'));
+				Tasks.$taskItemList.removeChild(tmp);
 			}
 		}
 	}
