@@ -1,4 +1,5 @@
 var urlList = new Array();
+var urlIndex = 0;
 var PAN_URL = "http://pan.baidu.com/";
 var PASSPORT_BASE = "https://passport.baidu.com/";
 var PASSPORT_URL = PASSPORT_BASE + "v2/api/";
@@ -77,16 +78,19 @@ var selectIds = '';
 			}
 			var xhr = new XMLHttpRequest();
 			xhr.onreadystatechange = function(){
+				var success = -1;
 				if (xhr.readyState == 4)
 				{
 					console.log(xhr.responseText);
 					var jsonRe = JSON.parse(xhr.responseText);
 					if (jsonRe.error_code)
 					{
-						Tasks.$state.innerHTML='errMsg is:' + jsonRe.error_msg;
+						Tasks.$state.innerHTML='errMsg is:' + jsonRe.error_msg + ':' + urlIndex;
 						if (jsonRe.error_code == -19)
 						{
 							var img = document.createElement('img');
+							success = 2;
+							console.log(success);
 							console.log(jsonRe.img);
 							img.setAttribute('src', jsonRe.img);
 							img.setAttribute('id', 'codeImg');
@@ -97,14 +101,23 @@ var selectIds = '';
 							vcodeGet = jsonRe.vcode;
 							selectIds = fileIds;
 						}
+						else
+						{
+							success = 0;
+						}
 					}
 					else
 					{
-						Tasks.$state.innerHTML='retCode is :' + jsonRe.rapid_download;
+						Tasks.$state.innerHTML='retCode is :' + jsonRe.rapid_download + ':' + urlIndex;
 						if (jsonRe.rapid_download == 0)
 						{
 							console.log('cancel');
 							Tasks.cancelTask(jsonRe.task_id.toString());
+							success = 0;
+						}
+						else
+						{
+							success = 1;
 						}
 					}
 				}
@@ -112,13 +125,24 @@ var selectIds = '';
 				{
 					Tasks.$state.innerHTML=xhr.statusText;
 				}
+				console.log('success:' + success);
+
+				if (success == 0)
+				{
+					urlIndex++;
+					if (urlIndex < urlList.length)
+					{
+						Tasks.queryMagnet(urlIndex);
+					}
+				}
 			};
 			xhr.open("POST", urlAdd, true);
 			xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
 			xhr.send(data);
-			Tasks.$state.innerHTML='add';
+			Tasks.$state.innerHTML='add:' + urlIndex;
 		},
-		queryMagnet:function(url){
+		queryMagnet:function(id){
+			var url = urlList[id].url
 			console.log(url);
 			var xhr = new XMLHttpRequest();
 			urlPost = PAN_URL + "rest/2.0/services/cloud_dl?channel=chunlei&clienttype=0&web=1" +
@@ -162,7 +186,12 @@ var selectIds = '';
 					}
 					else
 					{
-						Tasks.$state.innerHTML=xhr.statusText;
+						Tasks.$state.innerHTML=xhr.statusText + ':' + urlIndex;
+						urlIndex++;
+						if (urlIndex < urlList.length)
+						{
+							Tasks.queryMagnet(urlIndex);
+						}
 					}
 				}
 			};
@@ -271,14 +300,15 @@ var selectIds = '';
 						{
 							Tasks.$state.innerHTML = 'not find';
 						}
-						for(var i=0,len=urlList.length;i<len;i++){
-							Tasks.Add(urlList[i]);
-							Tasks.AppendHtml(urlList[i]);
+						for(var i=0,len=urlList.length;i<len;i++){ 
+							Tasks.Add(urlList[i]); 
+							Tasks.AppendHtml(urlList[i]); 
 						}
 					}
 					else
 					{
-						Tasks.$state.innerHTML = xhr.statusText;
+						console.log('log status:' + xhr.statusText);
+						Tasks.$state.innerHTML = 'status is :' + xhr.statusText;
 					}
 				}
 			};
@@ -294,15 +324,23 @@ var selectIds = '';
 						if (tabs[i].selected == true){
 							console.log(tabs[i].url);
 							if (tabs[i].url.indexOf("movie.douban.com") == -1){
-								var itemList = [];
+								urlList.length = 0;
 								for (var j = 0, len = window.localStorage.length; j < len; j++)
 								{
 									var key = window.localStorage.key(j);
 									if (/url_\d+/.test(key))
 									{
-										Tasks.AppendHtml(JSON.parse(window.localStorage.getItem(key)));
+										urlList.push(JSON.parse(window.localStorage.getItem(key)));
 									}
 								}
+								urlList.sort(function(a, b){
+									return a.id - b.id;
+								});
+								for (var j = 0, len = urlList.length; j < len; j++)
+								{
+									Tasks.AppendHtml(urlList[j]);
+								}
+
 							}
 							else
 							{
@@ -390,21 +428,28 @@ var selectIds = '';
 			oDiv.className='urlItem';
 			oDiv.setAttribute('id','url_' + urlItem.id);
 			oDiv.setAttribute('title', urlItem.url);
+			var spanIndex = document.createElement('span');
+			var textIndex = document.createTextNode(urlItem.id);
+
 			var spanTitle = document.createElement('span');
-			spanTitle.className = 'urlTitle';
+			spanTitle.className = 'red';
 			var textTitle = document.createTextNode(urlItem.title);
 
 			var spanSize = document.createElement('span');
 			spanSize.classNmae = 'urlSize';
 			var textSize = document.createTextNode(urlItem.size);
-
+			
+			spanIndex.appendChild(textIndex);
 			spanTitle.appendChild(textTitle);
 			spanSize.appendChild(textSize);
+
+			oDiv.appendChild(spanIndex);
 			oDiv.appendChild(spanTitle);
 			oDiv.appendChild(spanSize);
 
 			oDiv.addEventListener('click',function(){
-				Tasks.queryMagnet(urlItem.url);
+				urlIndex = urlItem.id;
+				Tasks.queryMagnet(urlIndex);
 			},true);
 			Tasks.$taskItemList.appendChild(oDiv);	
 		},
