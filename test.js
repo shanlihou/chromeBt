@@ -142,7 +142,50 @@ var selectIds = '';
 			Tasks.$state.innerHTML='add:' + urlIndex;
 		},
 		queryMagnet:function(id){
-			var url = urlList[id].url
+			var url = urlList[id].url;
+			if (Tasks.$engine.value == 'kitty')
+			{
+				Tasks.kittyMagnet(url);
+			}
+			else
+			{
+				Tasks.spreadMagnet(url);
+			}
+		},
+		spreadMagnet:function(url){
+			var xhr = new XMLHttpRequest();
+			xhr.onreadystatechange = function(){
+				if (xhr.readyState==4)
+				{// 4 = "loaded"a
+					if (xhr.status==200)
+					{// 200 = "OK"
+						var urlRe = new RegExp('<a id=\"magnetDownload\" href=\"[^\"]+', "g");
+						var result;
+						Tasks.$state.innerHTML = "get magnet finished";
+						result = urlRe.exec(xhr.responseText);
+						console.log(result);
+						if(result == null)
+						{
+							Tasks.$state.innerHTML = 'not find magnet';
+						}
+						else
+						{
+							var magnet = result.toString().substring(29);
+							console.log(magnet);
+							Tasks.kittyMagnet(magnet);
+						}
+					}
+					else
+					{
+						Tasks.$state.innerHTML = 'get magnet failed ' + xhr.statusText;
+					}
+				}
+			};
+			xhr.open("GET", url, true);
+			xhr.send(null);
+			Tasks.$state.innerHTML='get magnet:' + urlIndex;
+		},
+		kittyMagnet:function(url){
 			console.log(url);
 			var xhr = new XMLHttpRequest();
 			urlPost = PAN_URL + "rest/2.0/services/cloud_dl?channel=chunlei&clienttype=0&web=1" +
@@ -244,10 +287,93 @@ var selectIds = '';
 		$vCode:$('vCode'),
 		$eCode:$('eCode'),
 		$eEdit:$('eEdit'),
+		$engine:$('engine'),
 		//指针
 		index:window.localStorage.getItem('Tasks:index'),
-		
+
 		tagSearch:function(code){
+			console.log(Tasks.$engine.value);
+			if (Tasks.$engine.value == 'kitty')
+			{
+				Tasks.kittySearch(code);
+			}
+			else
+			{
+				Tasks.spreadSearch(code);
+			}
+		},
+		spreadSearch:function(code){
+			var xhr = new XMLHttpRequest();
+			xhr.onreadystatechange = function(){
+				console.log(xhr.readyState);
+				if (xhr.readyState == 4)
+				{
+					if (xhr.status == 200)
+					{
+						var urlRe = new RegExp('http://www\.btava\.com/magnet/detail/hash/[^\"]+', "g");
+						var titleRe = new RegExp("\" title=\"[^\"]+", "g");
+						var sizeRe = new RegExp("Size:[^ ]+", "g");
+						urlList.length = 0;
+						var i = 0;
+						var result;
+						console.log('torrent:' + code);
+						Tasks.$state.innerHTML = "search finished";
+						while(1)
+						{
+							var urlItem={
+								id:0,
+								url:'',
+								title:'',
+								size:''
+							};
+							urlItem.id = i;
+							result = urlRe.exec(xhr.responseText);
+							console.log(result);
+							if(result == null)
+							{
+								break;
+							}
+							urlItem.url = result.toString();
+							result = titleRe.exec(xhr.responseText);
+							console.log(result);
+							if(result == null)
+							{
+								break;
+							}
+							urlItem.title = result.toString().substring(9);
+							result = sizeRe.exec(xhr.responseText);
+							console.log(result);
+							if(result == null)
+							{
+								break;
+							}
+							urlItem.size = result.toString().substring(5);
+							urlList.push(urlItem);
+							i++;
+						}
+						if (i == 0)
+						{
+							Tasks.$state.innerHTML = 'not find';
+						}
+						for(var i=0,len=urlList.length;i<len;i++){ 
+							Tasks.Add(urlList[i]); 
+							Tasks.AppendHtml(urlList[i]); 
+						}
+					}
+					else
+					{
+						console.log('log status:' + xhr.statusText);
+						Tasks.$state.innerHTML = 'status is :' + xhr.statusText;
+					}
+				}
+
+			};
+			xhr.open("GET", "http://www.btava.com/search/" + encodeURIComponent(code), true);
+			console.log(encodeURIComponent(code));
+			xhr.send(null);
+			Tasks.$state.innerHTML = "spread search:" + code;
+		},
+		kittySearch:function(code){
 			var xhr = new XMLHttpRequest();
 			xhr.onreadystatechange = function(){
 				if (xhr.readyState==4)
@@ -315,7 +441,7 @@ var selectIds = '';
 			xhr.open("GET", "http://www.torrentkitty.org/search/" + encodeURIComponent(code), true);
 			console.log(encodeURIComponent(code));
 			xhr.send(null);
-			Tasks.$state.innerHTML = "search:" + code;
+			Tasks.$state.innerHTML = "kitty search:" + code;
 		},
 		getCurTab:function(){
 			chrome.windows.getCurrent(function(wnd){
@@ -374,6 +500,10 @@ var selectIds = '';
 			token = window.localStorage.getItem('token');
 			Tasks.$token.innerHTML = token;
 			Tasks.getCurTab();	
+			if (window.localStorage.getItem('engine') != null)
+			{
+				Tasks.$engine.value = window.localStorage.getItem('engine');
+			}
 			
 			/*注册事件*/
 			//打开添加文本框
@@ -408,7 +538,12 @@ var selectIds = '';
 				Tasks.$txtTaskTitle.value='';
 				Tasks.hide(Tasks.$addItemInput).show(Tasks.$addItemDiv);
 			},true);
-			Tasks.$bToken.onclick=Tasks.getToken;
+			Tasks.$bToken.onclick=Tasks.getToken; 
+			window.addEventListener('load', function(){
+				Tasks.$engine.onchange = function(){
+					window.localStorage.setItem('engine', Tasks.$engine.value);
+				};	
+			});
 		},
 		//增加
 		Add:function(urlItem){
