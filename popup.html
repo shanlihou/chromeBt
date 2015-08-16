@@ -12,6 +12,8 @@ img{margin:0 4px;}
 .show{display:block;}
 .urlItem{cursor:pointer;padding:2px 0;}
 .float{height:300px;overflow-y:scroll; overflow-x:scroll;}
+#prev{width:50px;}
+#next{width:50px;}
 input{width:100%;}
 span.red{color:red;}
 </style>
@@ -29,6 +31,8 @@ span.red{color:red;}
 <div id="addItemDiv">添加新项</div>
 <div id="addItemInput" class="hide"><input type="text" id="txtTaskTitle" /></div>
 <div id="taskItemList" class="float"></div>
+<input id="prev" type="button" value="<-prev"/>
+<input id="next" type="button" value="next->"/>
 <script type="text/javascript" src="util.js" ></script>
 <script type="text/javascript" src="test.js" ></script>
 </body>

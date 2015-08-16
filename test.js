@@ -8,6 +8,14 @@ var token = '';
 var urlMag = '';
 var vcodeGet = '';
 var selectIds = '';
+var cPrev = {
+	disable:true,
+	url:''
+};
+var cNext = {
+	disable:true,
+	url:''
+};
 (function(){
 	var $=function(id){return document.getElementById(id);}
 	var Tasks = {
@@ -288,6 +296,8 @@ var selectIds = '';
 		$eCode:$('eCode'),
 		$eEdit:$('eEdit'),
 		$engine:$('engine'),
+		$bPrev:$('prev'),
+		$bNext:$('next'),
 		//指针
 		index:window.localStorage.getItem('Tasks:index'),
 
@@ -303,7 +313,13 @@ var selectIds = '';
 			}
 		},
 		spreadSearch:function(code){
+			Tasks.$state.innerHTML = "spread search:" + code;
+			var url = "http://www.btava.com/search/" + encodeURIComponent(code);
+			Tasks.spreadUrl(url);
+		},
+		spreadUrl:function(url){
 			var xhr = new XMLHttpRequest();
+			console.log(url);
 			xhr.onreadystatechange = function(){
 				console.log(xhr.readyState);
 				if (xhr.readyState == 4)
@@ -313,10 +329,12 @@ var selectIds = '';
 						var urlRe = new RegExp('http://www\.btava\.com/magnet/detail/hash/[^\"]+', "g");
 						var titleRe = new RegExp("\" title=\"[^\"]+", "g");
 						var sizeRe = new RegExp("Size:[^ ]+", "g");
+						var prevRe = new RegExp("[^\"]+\"><span class=\"glyphicon glyphicon\-chevron\-left", "g");
+						//var prevRe = new RegExp("[^\"]+><span class=", "g");
+						var nextRe = new RegExp("[^\"]+\">Next", "g");
 						urlList.length = 0;
 						var i = 0;
 						var result;
-						console.log('torrent:' + code);
 						Tasks.$state.innerHTML = "search finished";
 						while(1)
 						{
@@ -359,6 +377,45 @@ var selectIds = '';
 							Tasks.Add(urlList[i]); 
 							Tasks.AppendHtml(urlList[i]); 
 						}
+						var index = 0;
+						result = prevRe.exec(xhr.responseText);
+						console.log(result);
+						if (result != null)
+						{
+							Tasks.$bPrev.disabled = false;
+							index = result.toString().indexOf("\"><span");
+							cPrev = {
+								disable:false,
+								url:'http://www.btava.com' + result.toString().substring(0,index)
+							};
+						}
+						else
+						{
+							Tasks.$bPrev.disabled = true;
+							cPrev = {
+								disable:true
+							};
+						}
+						result = nextRe.exec(xhr.responseText);
+						console.log(result);
+						if (result != null)
+						{
+							Tasks.$bNext.disabled = false;
+							index = result.toString().indexOf("\">Next");
+							console.log(index);
+							cNext = {
+								disable:false,
+								url:'http://www.btava.com' + result.toString().substring(0,index)
+							};
+						}
+						else
+						{
+							Tasks.$bNext.disabled = true;
+							cNext = {
+								disable:true
+							};
+						}
+						Tasks.SetButton();
 					}
 					else
 					{
@@ -368,10 +425,8 @@ var selectIds = '';
 				}
 
 			};
-			xhr.open("GET", "http://www.btava.com/search/" + encodeURIComponent(code), true);
-			console.log(encodeURIComponent(code));
+			xhr.open("GET", url, true);
 			xhr.send(null);
-			Tasks.$state.innerHTML = "spread search:" + code;
 		},
 		kittySearch:function(code){
 			var xhr = new XMLHttpRequest();
@@ -492,11 +547,27 @@ var selectIds = '';
 			});
 		},
 		//初始化
+		clickPrev:function(){
+			if (Tasks.$engine.value != 'kitty')
+			{
+				Tasks.RemoveAll();
+				Tasks.spreadUrl(cPrev.url);
+			}
+		},
+		clickNext:function(){
+			if (Tasks.$engine.value != 'kitty')
+			{
+				Tasks.RemoveAll();
+				Tasks.spreadUrl(cNext.url);
+			}
+		},
 		init:function(){
 			if(!Tasks.index){
 				window.localStorage.setItem('Tasks:index',Tasks.index=0);
 				
 			}
+			//Tasks.$bToken.disabled = true;
+			Tasks.GetButton();
 			token = window.localStorage.getItem('token');
 			Tasks.$token.innerHTML = token;
 			Tasks.getCurTab();	
@@ -539,6 +610,8 @@ var selectIds = '';
 				Tasks.hide(Tasks.$addItemInput).show(Tasks.$addItemDiv);
 			},true);
 			Tasks.$bToken.onclick=Tasks.getToken; 
+			Tasks.$bPrev.onclick = Tasks.clickPrev;
+			Tasks.$bNext.onclick = Tasks.clickNext;
 			window.addEventListener('load', function(){
 				Tasks.$engine.onchange = function(){
 					window.localStorage.setItem('engine', Tasks.$engine.value);
@@ -546,6 +619,31 @@ var selectIds = '';
 			});
 		},
 		//增加
+		SetButton:function(){
+			window.localStorage.setItem('cPrev', JSON.stringify(cPrev));
+			window.localStorage.setItem('cNext', JSON.stringify(cNext));
+		},
+		GetButton:function(){
+			cPrev = JSON.parse(window.localStorage.getItem('cPrev'));
+			cNext = JSON.parse(window.localStorage.getItem('cNext'));
+			if (cPrev != null)
+			{
+				Tasks.$bPrev.disabled = cPrev.disable;
+			}
+			else
+			{
+				Tasks.$bPrev.disabled = true;
+			}
+			
+			if (cNext != null)
+			{
+				Tasks.$bNext.disabled = cNext.disable;
+			}
+			else
+			{
+				Tasks.$bNext.disabled = true;
+			}
+		},
 		Add:function(urlItem){
 			//更新指针
 			window.localStorage.setItem("url_" + urlItem.id, JSON.stringify(urlItem));
