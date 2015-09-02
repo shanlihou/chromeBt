@@ -22,7 +22,7 @@ login.onclick = function(){
 };
 sign.onclick = function(){
 	console.log("sign");
-	var url = "http://www.sefoot.com/plugin.php?id=dsu_amupper&ppersubmit=true&formhash=3c0f9753&infloat=yes&handlekey=dsu_amupper&inajax=1&ajaxtarget=fwin_content_dsu_amupper"
+	var url = "http://www.sefoot.com/plugin.php?id=dsu_amupper&ppersubmit=true&formhash=3c0f9753&infloat=yes&handlekey=dsu_amupper&inajax=1&ajaxtarget=fwin_content_dsu_amupper";
 	var xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function(){
 		if(xhr.readyState == 4)
