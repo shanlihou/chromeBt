@@ -314,7 +314,7 @@ var cNext = {
 		},
 		spreadSearch:function(code){
 			Tasks.$state.innerHTML = "spread search:" + code;
-			var url = "http://www.btava.com/search/" + encodeURIComponent(code);
+			var url = "http://www.bt2mag.com/search/" + encodeURIComponent(code);
 			Tasks.spreadUrl(url);
 		},
 		spreadUrl:function(url){
@@ -326,7 +326,7 @@ var cNext = {
 				{
 					if (xhr.status == 200)
 					{
-						var urlRe = new RegExp('http://www\.btava\.com/magnet/detail/hash/[^\"]+', "g");
+						var urlRe = new RegExp('http://www\.bt2mag\.com/magnet/detail/hash/[^\"]+', "g");
 						var titleRe = new RegExp("\" title=\"[^\"]+", "g");
 						var sizeRe = new RegExp("Size:[^ ]+", "g");
 						var prevRe = new RegExp("[^\"]+\"><span class=\"glyphicon glyphicon\-chevron\-left", "g");
@@ -386,7 +386,7 @@ var cNext = {
 							index = result.toString().indexOf("\"><span");
 							cPrev = {
 								disable:false,
-								url:'http://www.btava.com' + result.toString().substring(0,index)
+								url:'http://www.bt2mag.com' + result.toString().substring(0,index)
 							};
 						}
 						else
@@ -405,7 +405,7 @@ var cNext = {
 							console.log(index);
 							cNext = {
 								disable:false,
-								url:'http://www.btava.com' + result.toString().substring(0,index)
+								url:'http://www.bt2mag.com' + result.toString().substring(0,index)
 							};
 						}
 						else
