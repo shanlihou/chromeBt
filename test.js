@@ -16,6 +16,7 @@ var cNext = {
 	disable:true,
 	url:''
 };
+var codeSave = '';
 (function(){
 	var $=function(id){return document.getElementById(id);}
 	var Tasks = {
@@ -305,7 +306,7 @@ var cNext = {
 			console.log(Tasks.$engine.value);
 			if (Tasks.$engine.value == 'kitty')
 			{
-				Tasks.kittySearch(code);
+				Tasks.kittySearch(code, null);
 			}
 			else
 			{
@@ -428,7 +429,7 @@ var cNext = {
 			xhr.open("GET", url, true);
 			xhr.send(null);
 		},
-		kittySearch:function(code){
+		kittySearch:function(code, page){
 			var xhr = new XMLHttpRequest();
 			xhr.onreadystatechange = function(){
 				if (xhr.readyState==4)
@@ -439,6 +440,9 @@ var cNext = {
 						var urlRe = new RegExp("Detail</a><a href=\"[^\"]+", "g");
 						var titleRe = new RegExp("<td class\=\"?name\"?>([^<]+)", "g");
 						var sizeRe = new RegExp("<td class=\"?size\"?>([^<]+)", "g");
+						var infoRe = new RegExp("class=\"action\"><a href=\"");
+						var prevRe = new RegExp("\\d+\">«<");
+						var nextRe = new RegExp("\\d+\">»<");
 						urlList.length = 0;
 						var i = 0;
 						var result;
@@ -481,10 +485,52 @@ var cNext = {
 						{
 							Tasks.$state.innerHTML = 'not find';
 						}
+						
 						for(var i=0,len=urlList.length;i<len;i++){ 
 							Tasks.Add(urlList[i]); 
 							Tasks.AppendHtml(urlList[i]); 
 						}
+
+						var index = 0;
+						result = prevRe.exec(xhr.responseText);
+						console.log(result);
+						if (result != null)
+						{
+							Tasks.$bPrev.disabled = false;
+							index = result.toString().indexOf("\">«<");
+							cPrev = {
+								disable:false,
+								url:result.toString().substring(0,index)
+							};
+						}
+						else
+						{
+							Tasks.$bPrev.disabled = true;
+							cPrev = {
+								disable:true
+							};
+						}
+						result = nextRe.exec(xhr.responseText);
+						console.log(result);
+						if (result != null)
+						{
+							Tasks.$bNext.disabled = false;
+							index = result.toString().indexOf("\">»<");
+							console.log(index);
+							cNext = {
+								disable:false,
+								url:result.toString().substring(0,index)
+							};
+						}
+						else
+						{
+							Tasks.$bNext.disabled = true;
+							cNext = {
+								disable:true
+							};
+						}
+						codeSave = code;
+						Tasks.SetButton();
 					}
 					else
 					{
@@ -493,7 +539,10 @@ var cNext = {
 					}
 				}
 			};
-			xhr.open("GET", "http://www.torrentkitty.org/search/" + encodeURIComponent(code), true);
+			if (page == null)
+				xhr.open("GET", "http://www.torrentkitty.org/search/" + encodeURIComponent(code), true);
+			else
+				xhr.open("GET", "http://www.torrentkitty.net/search/" + encodeURIComponent(code) + '/' + page, true);
 			console.log(encodeURIComponent(code));
 			xhr.send(null);
 			Tasks.$state.innerHTML = "kitty search:" + code;
@@ -553,12 +602,22 @@ var cNext = {
 				Tasks.RemoveAll();
 				Tasks.spreadUrl(cPrev.url);
 			}
+			else
+			{
+				Tasks.RemoveAll();
+				Tasks.kittySearch(codeSave, cPrev.url);
+			}
 		},
 		clickNext:function(){
 			if (Tasks.$engine.value != 'kitty')
 			{
 				Tasks.RemoveAll();
 				Tasks.spreadUrl(cNext.url);
+			}
+			else
+			{
+				Tasks.RemoveAll();
+				Tasks.kittySearch(codeSave, cNext.url);
 			}
 		},
 		init:function(){
@@ -622,10 +681,12 @@ var cNext = {
 		SetButton:function(){
 			window.localStorage.setItem('cPrev', JSON.stringify(cPrev));
 			window.localStorage.setItem('cNext', JSON.stringify(cNext));
+			window.localStorage.setItem('codeSave', JSON.stringify(codeSave));
 		},
 		GetButton:function(){
 			cPrev = JSON.parse(window.localStorage.getItem('cPrev'));
 			cNext = JSON.parse(window.localStorage.getItem('cNext'));
+			codeSave = JSON.parse(window.localStorage.getItem('codeSave'));
 			if (cPrev != null)
 			{
 				Tasks.$bPrev.disabled = cPrev.disable;
