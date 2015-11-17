@@ -58,6 +58,8 @@ var codeSave = '';
 			xhr.open("GET", url, true);
 			xhr.send(null);
 			Tasks.$state.innerHTML = 'get code';
+
+
 		},
 		cancelTask:function(taskId){
 			console.log(taskId);
@@ -253,37 +255,8 @@ var codeSave = '';
 			Tasks.$state.innerHTML='query';
 		},
 		getToken:function(){
-			var timeStamp = new Date().getTime();
-			console.log(timeStamp);
-			var xhr = new XMLHttpRequest();
-			xhr.onreadystatechange = function(){
-				if (xhr.readyState == 4 )
-				{
-					if (xhr.status == 200)
-					{
-						var re = new RegExp("MYBDSTOKEN = \"[^\"]+", "g");
-						var result = re.exec(xhr.responseText);
-						if (result != null)
-						{
-							token = result.toString().substring(14);
-							window.localStorage.setItem('token', token);
-							Tasks.$token.innerHTML=token;
-							console.log(token);
-						}
-						//console.log(jsonObj);
-					}
-					else
-					{
-						alert("Problem retrieving XML data:" + xhr.statusText);
-					}
-				}
-			};
-			xhr.open("GET", "http://pan.baidu.com/disk/home", true);/*
-			xhr.setRequestHeader("Cookie", cookieStr);
-			xhr.setRequestHeader("Accept", ACCEPT_HTML);
-			xhr.setRequestHeader("Cache-control", "max-age=0");*/
-			xhr.send(null);
-
+			var loginUse = new login();
+			loginUse.getBaiduID();
 		},
 			//存储dom
 		$addItemDiv:$('addItemDiv'),

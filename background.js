@@ -5,3 +5,4 @@
 // Simple extension to replace lolcat images from
 // http://icanhascheezburger.com/ with loldog images instead.
 
+console.log('hello');
