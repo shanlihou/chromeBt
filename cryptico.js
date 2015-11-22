@@ -3460,23 +3460,27 @@ var cryptico = (function() {
         return MD5(publicKeyString);
     }
     
-    my.publicKeyFromString = function(string)
+    my.publicKeyFromString = function(string, EStr)
     {
-        var N = my.b64to16(string.split("|")[0]);
-        var E = "03";
+    	console.log(string.split("|")[0]);
+//        var N = my.b64to16(string.split("|")[0]);
+	var N = string;
+	console.log(N);
+        var E = EStr;
         var rsa = new RSAKey();
         rsa.setPublic(N, E);
         return rsa
     }
     
-    my.encrypt = function(plaintext, publickeystring, signingkey)
+    my.encrypt = function(plaintext, publickeystring, E, signingkey)
     {
         var cipherblock = "";
         var aeskey = my.generateAESKey();
         try
         {
-            var publickey = my.publicKeyFromString(publickeystring);
-            cipherblock += my.b16to64(publickey.encrypt(my.bytes2string(aeskey))) + "?";
+            var publickey = my.publicKeyFromString(publickeystring, E);
+//            cipherblock += my.b16to64(publickey.encrypt(my.bytes2string(aeskey))) + "?";
+            cipherblock += my.b16to64(publickey.encrypt(my.bytes2string(aeskey)));
         }
         catch(err)
         {
@@ -3490,7 +3494,6 @@ var cryptico = (function() {
             plaintext += "::52cee64bb3a38f6403386519a39ac91c::";
             plaintext += signString;
         }
-        cipherblock += my.encryptAESCBC(plaintext, aeskey);    
         return {status: "success", cipher: cipherblock};
     }
 

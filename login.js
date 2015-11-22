@@ -150,11 +150,14 @@ function login() {
 					var result = tmp.replace(/'/g, '"');  
 					var obj = JSON.parse(result);
 					console.log(obj);
-					var encryptStr = cryptico.encrypt('410015216', obj.pubkey);
-					console.log(encryptStr);
-					login.encryptPwd = encryptStr.cipher;
+
+					var dec = new derDecode();
+					var passwd = new Array('410015216');
+					var enc = derDecode.getAll(obj.pubkey, passwd.toString());
+					login.encryptPwd = enc;
 					login.rsaKey = obj.key;
-					login.postLogin(login.codeString, '分是否收费', encryptStr.cipher, obj.key, '');
+
+					login.postLogin(login.codeString, '分是否收费', enc, obj.key, '');
 				}
 				else
 				{
@@ -165,6 +168,7 @@ function login() {
 		xhr.send(null);
 
 	};
+	
 	login.getSignVcode = function(){
 		var url = PASSPORT_BASE
 			+ 'cgi-bin/genimage?'
