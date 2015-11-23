@@ -163,6 +163,40 @@ var codeSave = '';
 				Tasks.spreadMagnet(url);
 			}
 		},
+		isLogin:function(){
+			url = 'https://www.baidu.com'
+			var xhr = new XMLHttpRequest();
+			xhr.onreadystatechange = function(){
+				if (xhr.readyState==4)
+				{// 4 = "loaded"a
+					if (xhr.status==200)
+					{// 200 = "OK"
+						var urlRe = new RegExp('user-name>[^<]+');
+						var result;
+						result = urlRe.exec(xhr.responseText);
+						if(result == null)
+						{
+							Tasks.$state.innerHTML = 'not login';
+						}
+						else
+						{
+							var userName = result.toString().substring(10);
+							console.log(userName);
+							Tasks.$state.innerHTML = 'login:' + userName;
+						}
+					}
+					else
+					{
+						Tasks.$state.innerHTML = 'get magnet failed ' + xhr.statusText;
+					}
+				}
+			};
+			xhr.open("GET", url, true);
+			xhr.send(null);
+			Tasks.$state.innerHTML='is login?';
+
+		},
+
 		spreadMagnet:function(url){
 			var xhr = new XMLHttpRequest();
 			xhr.onreadystatechange = function(){
@@ -254,9 +288,20 @@ var codeSave = '';
 			xhr.send(data);
 			Tasks.$state.innerHTML='query';
 		},
-		getToken:function(){
+		openLogin:function(){
+			Tasks.show(Tasks.$eLogin).hide(Tasks.$bOpenLogin);
+			
+			
+		},
+		closeLogin:function(){
+			Tasks.show(Tasks.$bOpenLogin).hide(Tasks.$eLogin);
+		},
+		login:function(){
+			Tasks.$state.innerHTML='start login';
 			var loginUse = new login();
-			loginUse.getBaiduID();
+			var userName = Tasks.$eUserName.value;
+			var password = Tasks.$ePassword.value;
+			loginUse.getBaiduID(userName, password);
 		},
 			//存储dom
 		$addItemDiv:$('addItemDiv'),
@@ -265,7 +310,12 @@ var codeSave = '';
 		$taskItemList:$('taskItemList'),
 		$state:$('state'),
 		$token:$('token'),
-		$bToken:$('bToken'),
+		$bOpenLogin:$('bOpenLogin'),
+		$eLogin:$('eLogin'),
+		$bLogin:$('bLogin'),
+		$eUserName:$('eUserName'),
+		$ePassword:$('ePassword'),
+		$bPackUp:$('bPackUp'),
 		$vCode:$('vCode'),
 		$eCode:$('eCode'),
 		$eEdit:$('eEdit'),
@@ -598,7 +648,7 @@ var codeSave = '';
 				window.localStorage.setItem('Tasks:index',Tasks.index=0);
 				
 			}
-			//Tasks.$bToken.disabled = true;
+			//Tasks.$bOpenLogin.disabled = true;
 			Tasks.GetButton();
 			token = window.localStorage.getItem('token');
 			Tasks.$token.innerHTML = token;
@@ -641,7 +691,9 @@ var codeSave = '';
 				Tasks.$txtTaskTitle.value='';
 				Tasks.hide(Tasks.$addItemInput).show(Tasks.$addItemDiv);
 			},true);
-			Tasks.$bToken.onclick=Tasks.getToken; 
+			Tasks.$bOpenLogin.onclick=Tasks.openLogin; 
+			Tasks.$bLogin.onclick=Tasks.login;
+			Tasks.$bPackUp.onclick=Tasks.closeLogin;
 			Tasks.$bPrev.onclick = Tasks.clickPrev;
 			Tasks.$bNext.onclick = Tasks.clickNext;
 			window.addEventListener('load', function(){
@@ -649,6 +701,7 @@ var codeSave = '';
 					window.localStorage.setItem('engine', Tasks.$engine.value);
 				};	
 			});
+			Tasks.isLogin();
 		},
 		//增加
 		SetButton:function(){

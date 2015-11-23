@@ -7,8 +7,11 @@ function login() {
 	login.eEdit = document.getElementById('eLoginEdit');
 	login.eCode = document.getElementById('eLoginCode');
 	login.vCode = document.getElementById('vCode');
+	login.state = document.getElementById('state');
 	login.encryptPwd = '';
 	login.rsaKey = '';
+	login.userName = '';
+	login.password = '';
 	login.show = function(obj){
 		obj.className='';
 		return this;
@@ -51,7 +54,9 @@ function login() {
 		xhr.send(null);
 
 	};
-	this.getBaiduID = function(){
+	this.getBaiduID = function(userName, password){
+		login.userName = userName;
+		login.password = password;
 		url = PASSPORT_URL
 			+ '?getapi&tpl=mn&apiver=v3'
 			+ '&tt=' 
@@ -152,12 +157,11 @@ function login() {
 					console.log(obj);
 
 					var dec = new derDecode();
-					var passwd = new Array('410015216');
-					var enc = derDecode.getAll(obj.pubkey, passwd.toString());
+					var enc = derDecode.getAll(obj.pubkey, login.password);
 					login.encryptPwd = enc;
 					login.rsaKey = obj.key;
 
-					login.postLogin(login.codeString, '分是否收费', enc, obj.key, '');
+					login.postLogin(login.codeString, login.userName, enc, obj.key, '');
 				}
 				else
 				{
@@ -218,9 +222,24 @@ function login() {
 					var re = new RegExp('err_no=[^&]+', 'g');
 					var reCode = new RegExp('codeString=[^&]+', 'g');
 					var result = re.exec(xhr.responseText);
+					var loginCode = '';
+
 					if (result != null){
-						console.log(result.toString().substring(7));
+						loginCode = result.toString().substring(7)
+						console.log(loginCode);
 					}
+					if (loginCode == '257'){
+						login.state.innerHTML='请输入验证码';
+					}else if(loginCode == '4'){
+						login.state.innerHTML='密码错误';
+						return;
+					}else{
+						login.state.innerHTML='登陆可能成功:' + loginCode;
+						login.isLogin();
+						return;
+					}
+					console.log('get code');
+
 
 					result = reCode.exec(xhr.responseText);
 					if (result != null){
@@ -228,8 +247,6 @@ function login() {
 						login.codeString = result.toString().substring(11);
 						login.getSignVcode();
 					}
-
-
 				}
 				else
 				{
@@ -241,19 +258,52 @@ function login() {
 		xhr.send(data);
 
 	};
+	login.isLogin = function(){
+		url = 'https://www.baidu.com'
+			var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function(){
+			if (xhr.readyState==4)
+			{// 4 = "loaded"a
+				if (xhr.status==200)
+				{// 200 = "OK"
+					var urlRe = new RegExp('user-name>[^<]+');
+					var result;
+					result = urlRe.exec(xhr.responseText);
+					if(result == null)
+					{
+						login.state.innerHTML = '登录失败';
+					}
+					else
+					{
+						var userName = result.toString().substring(10);
+						console.log(userName);
+						login.state.innerHTML = '登陆成功:' + userName;
+					}
+				}
+				else
+				{
+					login.state.innerHTML = '登录失败' + xhr.statusText;
+				}
+			}
+		};
+		xhr.open("GET", url, true);
+		xhr.send(null);
+	};
+
+
 	login.init = function(){
 		login.eEdit.addEventListener('keyup', function(ev){
 				var ev=ev || window.event;
 				if (ev.keyCode == 13){
-					var codeImg = document.getElementById('codeImg');
-					var value = login.eEdit.value;
-					login.postLogin(login.codeString, '分是否收费', login.encryptPwd, login.rsaKey, value);
-					login.vCode.removeChild(codeImg);
-					login.eEdit.value = '';
-					login.hide(login.eCode);
+				var codeImg = document.getElementById('codeImg');
+				var value = login.eEdit.value;
+				login.postLogin(login.codeString, '分是否收费', login.encryptPwd, login.rsaKey, value);
+				login.vCode.removeChild(codeImg);
+				login.eEdit.value = '';
+				login.hide(login.eCode);
 				}
 				ev.preventDefault();
-			}, true);
+				}, true);
 	};
 	login.init();
 }
