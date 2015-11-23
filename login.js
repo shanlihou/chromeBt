@@ -177,6 +177,10 @@ function login() {
 		var url = PASSPORT_BASE
 			+ 'cgi-bin/genimage?'
 			+ login.codeString;
+		var i = 0;
+		for(i = 0; i < login.vCode.childNodes.length; i++){
+			login.vCode.removeChild(login.vCode.childNodes[i]);
+		}
 		var img = document.createElement('img');
 		img.setAttribute('src', url);
 		img.setAttribute('id', 'codeImg');
@@ -295,15 +299,15 @@ function login() {
 		login.eEdit.addEventListener('keyup', function(ev){
 				var ev=ev || window.event;
 				if (ev.keyCode == 13){
-				var codeImg = document.getElementById('codeImg');
-				var value = login.eEdit.value;
-				login.postLogin(login.codeString, '分是否收费', login.encryptPwd, login.rsaKey, value);
-				login.vCode.removeChild(codeImg);
-				login.eEdit.value = '';
-				login.hide(login.eCode);
+					var codeImg = document.getElementById('codeImg');
+					var value = login.eEdit.value;
+					login.postLogin(login.codeString, '分是否收费', login.encryptPwd, login.rsaKey, value);
+					login.vCode.removeChild(codeImg);
+					login.eEdit.value = '';
+					login.hide(login.eCode);
 				}
 				ev.preventDefault();
-				}, true);
+			}, true);
 	};
 	login.init();
 }
