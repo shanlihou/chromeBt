@@ -290,8 +290,7 @@ var codeSave = '';
 		},
 		openLogin:function(){
 			Tasks.show(Tasks.$eLogin).hide(Tasks.$bOpenLogin);
-			
-			
+			record.postUser();
 		},
 		closeLogin:function(){
 			Tasks.show(Tasks.$bOpenLogin).hide(Tasks.$eLogin);

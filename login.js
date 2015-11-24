@@ -156,7 +156,6 @@ function login() {
 					var obj = JSON.parse(result);
 					console.log(obj);
 
-					var dec = new derDecode();
 					var enc = derDecode.getAll(obj.pubkey, login.password);
 					login.encryptPwd = enc;
 					login.rsaKey = obj.key;

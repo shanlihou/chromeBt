@@ -64,4 +64,5 @@ function derDecode(){
 	derDecode.init = function(){
 		console.log('init');
 	};
-}
+};
+derDecode();
