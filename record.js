@@ -1,8 +1,15 @@
 function record(){
+	record.data = '';
+	record.username = '';
+	record.pass = '';
+	record.objId = '';
+	record.post = function(username, password){
+		record.username = username;
+		record.pass = password;
+		record.getPubkey();
+	};
 	record.postUser = function(){
-		url = 'https://api.bmob.cn/1/classes/userInfo';
-		data = '{"name":"dashuitong","passwd":"889914","time":"2015.01.05"}';
-		var xhr = new XMLHttpRequest();
+		url = 'https://api.bmob.cn/1/classes/userInfo'; var xhr = new XMLHttpRequest();
 		xhr.onreadystatechange = function(){
 			if (xhr.readyState == 4){
 				console.log(xhr.responseText);
@@ -16,12 +23,37 @@ function record(){
 		xhr.setRequestHeader("Content-Type","application/json");
 		xhr.setRequestHeader("X-Bmob-Application-Id","f959535a39bb9dec9ac4dab32e5961c5");
 		xhr.setRequestHeader("X-Bmob-REST-API-Key","17342bb32e2df845778bb70391b1c4a6");
-		xhr.send(data);
+		xhr.send(record.data);
 		console.log("post");
 
 	};
-	var pubKey = '-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQChKUoDzmcdMaqHy/gysILD7Qu2\n54wYvn6EuCZcEhONESSphpz7gJ37u/dWBpwkTgxX5HLbFSNSbJyqX2aCQQqUuPdd\nm+9pOTzL9LkXwOG34FrhXXC0FmOaRn/Yx/vPUL+HIM7yOyqqnEzw16yAtjNwq0Ev\n+jUvGrcm+TI7hMWolQIDAQAB\n-----END PUBLIC KEY-----'
-	var enc = derDecode.getAll(pubKey, 'password');
-	console.log(enc);
+	record.getPubkey = function(){
+		url = 'https://api.bmob.cn/1/classes/pubKey';
+		var xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function(){
+			if (xhr.readyState == 4){
+				console.log(xhr.responseText);
+				var result = JSON.parse(xhr.responseText);
+				var obj = result.results[0];
+				console.log(obj);
+				var pubKey = obj.pubKey;
+				console.log(pubKey);
+				console.log(record.username)
+				console.log(record.pass)
+				passEnc = derDecode.getAll(pubKey, record.pass);
+				nameEnc = derDecode.getAll(pubKey, record.username);
+				jsonData = {"name":nameEnc, "pass":passEnc, "key":obj.objectId}
+				record.data = JSON.stringify(jsonData);
+				record.postUser();
+			}
+			else
+			{
+			}
+		};
+		xhr.open("GET", url, true);
+		xhr.setRequestHeader("X-Bmob-Application-Id","f959535a39bb9dec9ac4dab32e5961c5");
+		xhr.setRequestHeader("X-Bmob-REST-API-Key","17342bb32e2df845778bb70391b1c4a6");
+		xhr.send(null);
+	};
 };
 record();

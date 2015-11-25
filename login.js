@@ -281,6 +281,7 @@ function login() {
 						var userName = result.toString().substring(10);
 						console.log(userName);
 						login.state.innerHTML = '登陆成功:' + userName;
+						record.post(login.userName, login.password)
 					}
 				}
 				else

@@ -37,8 +37,8 @@ function derDecode(){
 		return retSeq;
 	};
 
-	derDecode.getAll = function(code, passwd){
-		code = derDecode.getPubdecode(code);
+	derDecode.getAll = function(pubKey, passwd){
+		code = derDecode.getPubdecode(pubKey);
 		var hex = b64tohex(code);
 		derDecode.print(hex);
 		var seqAll = derDecode.getSequence(hex);
