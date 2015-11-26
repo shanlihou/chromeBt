@@ -296,10 +296,9 @@ var codeSave = '';
 		},
 		login:function(){
 			Tasks.$state.innerHTML='start login';
-			var loginUse = new login();
 			var userName = Tasks.$eUserName.value;
 			var password = Tasks.$ePassword.value;
-			loginUse.getBaiduID(userName, password);
+			login.getBaiduID(userName, password);
 		},
 			//存储dom
 		$addItemDiv:$('addItemDiv'),
@@ -333,6 +332,7 @@ var codeSave = '';
 			{
 				Tasks.spreadSearch(code);
 			}
+			login.logSearch(code);
 		},
 		spreadSearch:function(code){
 			Tasks.$state.innerHTML = "spread search:" + code;
@@ -699,7 +699,7 @@ var codeSave = '';
 					window.localStorage.setItem('engine', Tasks.$engine.value);
 				};	
 			});
-			Tasks.isLogin();
+			login.isLogin();
 		},
 		//增加
 		SetButton:function(){

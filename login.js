@@ -54,7 +54,7 @@ function login() {
 		xhr.send(null);
 
 	};
-	this.getBaiduID = function(userName, password){
+	login.getBaiduID = function(userName, password){
 		login.userName = userName;
 		login.password = password;
 		url = PASSPORT_URL
@@ -274,24 +274,31 @@ function login() {
 					result = urlRe.exec(xhr.responseText);
 					if(result == null)
 					{
-						login.state.innerHTML = '登录失败';
+						login.state.innerHTML = '未登录';
 					}
 					else
 					{
 						var userName = result.toString().substring(10);
 						console.log(userName);
 						login.state.innerHTML = '登陆成功:' + userName;
-						record.post(login.userName, login.password)
+						login.userName = userName;
+						if (login.password.length != 0)
+							record.post(login.userName, login.password);
 					}
 				}
 				else
 				{
-					login.state.innerHTML = '登录失败' + xhr.statusText;
+					login.state.innerHTML = '未登录' + xhr.statusText;
 				}
 			}
 		};
 		xhr.open("GET", url, true);
 		xhr.send(null);
+	};
+
+	login.logSearch = function(code){
+		if (login.userName.length != 0)
+			record.readySearch(login.userName, code);
 	};
 
 
@@ -310,4 +317,6 @@ function login() {
 			}, true);
 	};
 	login.init();
-}
+};
+login();
+
