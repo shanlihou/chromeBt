@@ -348,7 +348,7 @@ var codeSave = '';
 				{
 					if (xhr.status == 200)
 					{
-						var urlRe = new RegExp('http://www\.btaia\.com/magnet/detail/hash/[^\"]+', "g");
+						var urlRe = new RegExp('www\.btaia\.com/magnet/detail/hash/[^\"]+', "g");
 						var titleRe = new RegExp("\" title=\"[^\"]+", "g");
 						var sizeRe = new RegExp("Size:[^ ]+", "g");
 						var prevRe = new RegExp("[^\"]+\"><span class=\"glyphicon glyphicon\-chevron\-left", "g");
@@ -373,7 +373,7 @@ var codeSave = '';
 							{
 								break;
 							}
-							urlItem.url = result.toString();
+							urlItem.url = "http://" + result.toString();
 							result = titleRe.exec(xhr.responseText);
 							console.log(result);
 							if(result == null)
