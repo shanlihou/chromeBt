@@ -336,7 +336,7 @@ var codeSave = '';
 		},
 		spreadSearch:function(code){
 			Tasks.$state.innerHTML = "spread search:" + code;
-			var url = "http://www.btaia.com/search/" + encodeURIComponent(code);
+			var url = "https://btio.pw/search/" + encodeURIComponent(code);
 			Tasks.spreadUrl(url);
 		},
 		spreadUrl:function(url){
@@ -348,7 +348,7 @@ var codeSave = '';
 				{
 					if (xhr.status == 200)
 					{
-						var urlRe = new RegExp('www\.btaia\.com/magnet/detail/hash/[^\"]+', "g");
+						var urlRe = new RegExp('btio\.pw/magnet/detail/hash/[^\"]+', "g");
 						var titleRe = new RegExp("\" title=\"[^\"]+", "g");
 						var sizeRe = new RegExp("Size:[^ ]+", "g");
 						var prevRe = new RegExp("[^\"]+\"><span class=\"glyphicon glyphicon\-chevron\-left", "g");
@@ -408,7 +408,7 @@ var codeSave = '';
 							index = result.toString().indexOf("\"><span");
 							cPrev = {
 								disable:false,
-								url:'http://www.btaia.com' + result.toString().substring(0,index)
+								url:'https://btio.pw' + result.toString().substring(0,index)
 							};
 						}
 						else
@@ -427,7 +427,7 @@ var codeSave = '';
 							console.log(index);
 							cNext = {
 								disable:false,
-								url:'http://www.btaia.com' + result.toString().substring(0,index)
+								url:'https://btio.pw' + result.toString().substring(0,index)
 							};
 						}
 						else
